@@ -1,0 +1,13 @@
+
+1) Install miniconda and follow the guide to init.
+2) Create virtual environment by:
+        conda create --prefix ~/venv/mktdatacheck python=3.10
+        conda activate ~/venv/mktdatacheck
+        pip install numpy==1.26.4
+        pip install dask
+        pip install pandas
+        pip install  soda-core-pandas-dask
+
+
+3) Each time you run the program, remember to activate venv:
+        conda activate ~/venv/mktdatacheck
