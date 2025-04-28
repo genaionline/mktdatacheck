@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soda Data Quality Scanner</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .status-badge {
+            width: 80px;
+            text-align: center;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+        .status-pass {
+            background-color: #28a745;
+            color: white;
+        }
+        .status-fail {
+            background-color: #dc3545;
+            color: white;
+        }
+        .status-warn {
+            background-color: #fd7e14;
+            color: white;
+        }
+        .status-unknown {
+            background-color: #6c757d;
+            color: white;
+        }
+        .summary-card {
+            transition: transform 0.2s;
+        }
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">Soda Data Quality Scanner</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html> 

@@ -11,3 +11,7 @@
 
 3) Each time you run the program, remember to activate venv:
         conda activate ~/venv/mktdatacheck
+
+
+4) Run Flask:
+        python app.py

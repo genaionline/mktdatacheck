@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Scan Results Summary</h2>
+    </div>
+    <div class="col text-end">
+        <button id="runScan" class="btn btn-primary">
+            <i class="bi bi-play-circle"></i> Run New Scan
+        </button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="card summary-card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ results.summary.passed }}</h3>
+                <p class="mb-0">Passed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card summary-card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3>{{ results.summary.failed }}</h3>
+                <p class="mb-0">Failed</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card summary-card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ results.summary.warned }}</h3>
+                <p class="mb-0">Warnings</p>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card summary-card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h3>{{ results.summary.errored }}</h3>
+                <p class="mb-0">Errors</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title mb-0">Detailed Results</h3>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Dataset</th>
+                        <th>Check Name</th>
+                        <th>Status</th>
+                        <th>Diagnostics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for check in results.checks %}
+                    <tr>
+                        <td>{{ check.dataset }}</td>
+                        <td>{{ check.name }}</td>
+                        <td>
+                            <span class="status-badge {% if check.outcome == 'PASS' %}status-pass{% elif check.outcome == 'FAIL' %}status-fail{% elif check.outcome == 'WARN' %}status-warn{% else %}status-unknown{% endif %}">
+                                {{ check.outcome }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if check.diagnostics %}
+                            <ul class="list-unstyled mb-0">
+                                {% for diagnostic in check.diagnostics %}
+                                <li>{{ diagnostic }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    $('#runScan').click(function() {
+        var button = $(this);
+        button.prop('disabled', true);
+        button.html('<span class="spinner-border spinner-border-sm"></span> Running...');
+        
+        $.ajax({
+            url: '/api/run-scan',
+            method: 'POST',
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr, status, error) {
+                alert('Error running scan: ' + error);
+                button.prop('disabled', false);
+                button.html('<i class="bi bi-play-circle"></i> Run New Scan');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

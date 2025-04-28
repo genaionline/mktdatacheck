@@ -4,6 +4,100 @@
 import dask.datasets
 import pandas as pd
 from soda.scan import Scan
+import os
+from datetime import datetime
+
+
+def generate_scan_report(scan):
+    """Generate a formatted report from scan results."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+    report = []
+    report.append("=" * 80)
+    report.append(f"SODA DATA QUALITY SCAN REPORT")
+    report.append(f"Generated at: {now}")
+    report.append("=" * 80)
+    
+    # Overall scan summary
+    report.append("\nSCAN SUMMARY")
+    report.append("-" * 80)
+    report.append(f"Total Checks Run: {len(scan._checks)}")
+    
+    # Count check outcomes
+    passed = sum(1 for c in scan._checks if getattr(c, 'outcome', None) == 'PASS')
+    failed = sum(1 for c in scan._checks if getattr(c, 'outcome', None) == 'FAIL')
+    warned = sum(1 for c in scan._checks if getattr(c, 'outcome', None) == 'WARN')
+    errored = sum(1 for c in scan._checks if getattr(c, 'outcome', None) == 'ERROR')
+    
+    report.append(f"Passed Checks:    {passed}")
+    report.append(f"Failed Checks:    {failed}")
+    report.append(f"Warning Checks:   {warned}")
+    report.append(f"Error Checks:     {errored}")
+    
+    # Detailed results by dataset
+    report.append("\nDETAILED RESULTS")
+    report.append("-" * 80)
+    
+    # Group checks by dataset
+    checks_by_dataset = {}
+    for check in scan._checks:
+        # Try to get dataset name from various possible attributes
+        dataset = None
+        if hasattr(check, 'dataset_name'):
+            dataset = check.dataset_name
+        elif hasattr(check, 'table_name'):
+            dataset = check.table_name
+        else:
+            dataset = "Global"
+            
+        if dataset not in checks_by_dataset:
+            checks_by_dataset[dataset] = []
+        checks_by_dataset[dataset].append(check)
+    
+    # Print results for each dataset
+    for dataset, checks in checks_by_dataset.items():
+        report.append(f"\nDataset: {dataset}")
+        report.append("-" * 40)
+        
+        for check in checks:
+            outcome = getattr(check, 'outcome', 'UNKNOWN')
+            outcome_symbol = {
+                'PASS': '✓',
+                'FAIL': '✗',
+                'WARN': '⚠',
+                'ERROR': '!'
+            }.get(outcome, '?')
+            
+            # Try to get check name or description from various possible attributes
+            check_name = None
+            if hasattr(check, 'name'):
+                check_name = check.name
+            elif hasattr(check, 'check_name'):
+                check_name = check.check_name
+            elif hasattr(check, 'check_cfg'):
+                check_name = str(check.check_cfg)
+            else:
+                check_name = str(check)
+            
+            report.append(f"{outcome_symbol} [{outcome}] {check_name}")
+            
+            # Add diagnostics if available
+            if outcome in ['FAIL', 'ERROR']:
+                diagnostics = []
+                if hasattr(check, 'diagnostics'):
+                    diagnostics.append(str(check.diagnostics))
+                if hasattr(check, 'error'):
+                    diagnostics.append(str(check.error))
+                if diagnostics:
+                    report.append(f"  └─ Diagnostics: {' | '.join(diagnostics)}")
+    
+    # Final summary
+    report.append("\n" + "=" * 80)
+    report.append("END OF REPORT")
+    report.append("=" * 80)
+    
+    return "\n".join(report)
+
 
 # Create soda scan object
 scan = Scan()
@@ -23,59 +117,14 @@ scan.add_dask_dataframe(dataset_name="timeseries", dask_df=df_timeseries)
 # Add pandas dataframe to scan and assign a dataset name to refer from checks yaml
 scan.add_pandas_dataframe(dataset_name="employee", pandas_df=df_employee)
 
-# Define checks in yaml format
-# alternatively you can refer to a yaml file using scan.add_sodacl_yaml_file(<filepath>)
-checks = """
-for each dataset T:
-  datasets:
-    - include %
-  checks:
-    - row_count > 0
+# Load checks from external YAML file with explicit path handling
+yaml_path = os.path.join(os.path.dirname(__file__), "checks.yml")
+if not os.path.exists(yaml_path):
+    raise FileNotFoundError(f"YAML file not found at: {yaml_path}")
 
-profile columns:
-  columns:
-    - employee.%
+scan.add_sodacl_yaml_file(yaml_path)
 
-checks for employee:
-    - values in (email) must exist in timeseries (email) # Error expected
-    - row_count same as timeseries # Error expected
-
-checks for timeseries:
-  - avg_x_minus_y between -1 and 1:
-      avg_x_minus_y expression: AVG(x - y)
-  - failed rows:
-      samples limit: 50
-      fail condition: x >= 3
-  - schema:
-      name: Confirm that required columns are present
-      warn:
-        when required column missing: [x]
-        when forbidden column present: [email]
-        when wrong column type:
-          email: varchar
-      fail:
-        when required column missing:
-          - y
-  - invalid_count(email) = 0:
-      valid format: email
-  - valid_count(email) > 0:
-      valid format: email
-  - duplicate_count(name) < 4:
-      samples limit: 2
-  - missing_count(y):
-      warn: when > -1
-  - missing_percent(x) < 5%
-  - missing_count(y) = 0
-  - avg(x) between -1 and 1
-  - max(x) > 0
-  - min(x) < 1:
-      filter: x > 0.2
-  - freshness(timestamp) < 1d
-  - values in (email) must exist in employee (email)
-"""
-
-scan.add_sodacl_yaml_str(checks)
-
-scan.set_verbose(True)
+# Execute scan and generate report
 scan.execute()
+print(generate_scan_report(scan))
 
