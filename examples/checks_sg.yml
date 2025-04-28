@@ -1,0 +1,119 @@
+checks for excel_data:
+  # Check 1: First column not empty
+  - missing_count(segment) = 0:
+      name: Check if first column has any empty values
+      fail: when > 0
+
+  # Check 2: First column values validation
+  - invalid_count(segment) = 0:
+      name: Check if first column contains only allowed values
+      valid values: 
+        - D2C
+        - DPP
+        - engagement
+        - overall
+
+  # Check 3: Monthly columns validation
+  - missing_count(lya_jan):
+      name: Check for empty values in January
+      warn: when > 0
+  - missing_count(lya_feb):
+      name: Check for empty values in February
+      warn: when > 0
+  - missing_count(lya_mar):
+      name: Check for empty values in March
+      warn: when > 0
+  - missing_count(lya_apr):
+      name: Check for empty values in April
+      warn: when > 0
+  - missing_count(lya_may):
+      name: Check for empty values in May
+      warn: when > 0
+  - missing_count(lya_jun):
+      name: Check for empty values in June
+      warn: when > 0
+  - missing_count(lya_jul):
+      name: Check for empty values in July
+      warn: when > 0
+  - missing_count(lya_aug):
+      name: Check for empty values in August
+      warn: when > 0
+  - missing_count(lya_sep):
+      name: Check for empty values in September
+      warn: when > 0
+  - missing_count(lya_oct):
+      name: Check for empty values in October
+      warn: when > 0
+  - missing_count(lya_nov):
+      name: Check for empty values in November
+      warn: when > 0
+  - missing_count(lya_dec):
+      name: Check for empty values in December
+      warn: when > 0
+
+  # Check for increasing values month over month
+  - failed rows:
+      name: Check if values are not increasing (Jan to Feb)
+      warn:
+        when > 0
+      fail condition: lya_feb < lya_jan
+
+  - failed rows:
+      name: Check if values are not increasing (Feb to Mar)
+      warn:
+        when > 0
+      fail condition: lya_mar < lya_feb
+
+  - failed rows:
+      name: Check if values are not increasing (Mar to Apr)
+      warn:
+        when > 0
+      fail condition: lya_apr < lya_mar
+
+  - failed rows:
+      name: Check if values are not increasing (Apr to May)
+      warn:
+        when > 0
+      fail condition: lya_may < lya_apr
+
+  - failed rows:
+      name: Check if values are not increasing (May to Jun)
+      warn:
+        when > 0
+      fail condition: lya_jun < lya_may
+
+  - failed rows:
+      name: Check if values are not increasing (Jun to Jul)
+      warn:
+        when > 0
+      fail condition: lya_jul < lya_jun
+
+  - failed rows:
+      name: Check if values are not increasing (Jul to Aug)
+      warn:
+        when > 0
+      fail condition: lya_aug < lya_jul
+
+  - failed rows:
+      name: Check if values are not increasing (Aug to Sep)
+      warn:
+        when > 0
+      fail condition: lya_sep < lya_aug
+
+  - failed rows:
+      name: Check if values are not increasing (Sep to Oct)
+      warn:
+        when > 0
+      fail condition: lya_oct < lya_sep
+
+  - failed rows:
+      name: Check if values are not increasing (Oct to Nov)
+      warn:
+        when > 0
+      fail condition: lya_nov < lya_oct
+
+  - failed rows:
+      name: Check if values are not increasing (Nov to Dec)
+      warn:
+        when > 0
+      fail condition: lya_dec < lya_nov 
